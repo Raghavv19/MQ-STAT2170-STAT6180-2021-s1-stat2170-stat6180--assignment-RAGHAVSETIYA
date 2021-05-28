@@ -1,0 +1,220 @@
+---
+title: "Assignment 1"
+author: "Raghav Setiya"
+date: "5/27/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+```
+
+## Question 1
+
+```{r}
+surg_data <- read.table("surg.txt", header = T)
+summary(surg_data)
+```
+
+
+### A)
+
+Produce a scatte rplot of the data and comment on the features of the data and possible relationships
+between the response and predictors and relationships between the predictors themselves.
+- You will need to remove the gender variable to do this.
+- Comment on why it is necessary to remove the gender variable to compute the correlation matrix.
+
+```{r}
+  
+ns <- subset(surg_data, select = -c(gender))
+pairs(ns, pch = 19,  cex = 0.5,
+      lower.panel=NULL)
+```
+
+To make the scatter plot,we need to use the Pairs function. This function is compatible with numeric variables while character variables are not compatible with this,therefore,we need to remove character variables like gender. From the above graph, we can see that there is almost linear relationship with every predictor. All the variables are predictors while survival is the response variable.
+
+
+
+
+
+### B)
+
+Compute the correlation matrix of the dataset and comment.
+
+```{r}
+cor(ns)
+```
+
+From the above correlation matrix, we can see that some values are negative and some are positive. Values with more than 0.5 are known as highly correlated variables,whereas negative values shows negative correlation. All the predictors have positive correlation with response variable except age.
+
+### C)
+
+Fit a model using all the predictors to explain the survival response. Conduct an F-test for the overall
+regression i.e. is there any relationship between the response and the predictors. In your answer:
+- Write down the mathematical multiple regression model for this situation, defining all appropriate
+parameters.
+- Write down the Hypotheses for the Overall ANOVA test of multiple regression.
+- Produce an ANOVA table for the overall multiple regression model (One combined regression SS
+source is sufficient).
+- Compute the F statistic for this test.
+- State the Null distribution.
+- Compute the P-Value
+- State your conclusion (both statistical conclusion and contextual conclusion).
+
+
+```{r}
+################################################################
+lin_mod1 <- lm(survival ~., data = surg_data)
+lin_mod2 <- lm(survival ~ . -blood, data = surg_data)
+lin_mod3 <- lm(survival ~ liver+age, data = surg_data)
+lin_mod4 <- lm(survival ~ liver+age+gender+prognosis, data = surg_data)
+lin_mod5 <- lm(survival ~ blood+prognosis+enzyme+liver, data = surg_data)
+
+################################################################
+#H0: liver age and gender are not significant variables to predict survival
+#H1: liver age and gende are significant variables to predict survival
+
+################################################################
+anova_mod <- anova(lin_mod1)
+anova_mod
+
+################################################################
+anova_mod$`F value`
+
+################################################################
+# Null Distribution
+# Our null distribution is then Normal. Now that we have a null distribution, we need to dream up a test statistic.
+
+################################################################
+t_value = (mean(surg_data$survival) - 10) / (sd(surg_data$survival) / sqrt(length(surg_data$survival))) 
+t_value
+p_value = 2*pt(-abs(t_value), df=length(surg_data$survival)-1)
+p_value
+
+
+```
+
+From the correlation matrix,it is found that variables like blood, prognosis and enzyme are highly significant. The final P-value is about 7.659093e-18 which is less than overall p-value significance level (0.05). The maximum variance in model is about 69%. As Statistical conclusion, our p-value is about 1.19*10^-10 which is also less than 0.05 and therefore,we reject null hypothesis. 
+
+
+
+### D)
+
+Using model selection procedures discussed in the course, find the best multiple regression model that explains the data.
+
+```{r}
+summary(lin_mod1)
+summary(lin_mod2)
+summary(lin_mod3)
+summary(lin_mod4)
+summary(lin_mod5)
+```
+
+Model 5 is best model.
+
+
+### E)
+
+Validate your final model and comment why it is not appropriate to use the multiple regression model to explain the survival time.
+
+The linear model 1 and final model is about same. Therefore, we can say that blood, prognosis, enzyme and liver are the most efficient variables in terms of regression model.
+
+
+### F)
+
+Re-fit the model using log(survival) as the new response variable. In your answer,
+- Use the model selection procedure discussed in the course starting with log(survival) as the
+response and start with all the predictors.
+
+```{r}
+lin_mod6 <- lm(log(survival) ~., data = surg_data)
+lin_mod7 <- lm(log(survival) ~ . -blood, data = surg_data)
+lin_mod8 <- lm(log(survival) ~ liver+age, data = surg_data)
+lin_mod9 <- lm(log(survival) ~ liver+age+gender+prognosis, data = surg_data)
+lin_mod10 <- lm(log(survival) ~ blood+prognosis+enzyme+liver, data = surg_data)
+```
+
+
+### G)
+
+Validate your final model with the log(survival) response. In particular, in your answer,
+- Explain why the regression model with log(survival) response variable is superior to the model with the survival response variable
+
+```{r}
+summary(lin_mod6)
+summary(lin_mod7)
+summary(lin_mod8)
+summary(lin_mod9)
+summary(lin_mod10)
+```
+
+Model 6 gives the best significance.
+
+
+## Question 2
+
+```{r}
+kml_data <- read.table("kml.txt", header = T)
+summary(kml_data)
+```
+
+### A)
+
+For this study, is the design balanced or unbalanced? Explain why.
+
+```{r}
+summary(kml_data$kmL)
+plot(kml_data$kmL)
+
+ggplot(kml_data, aes(x=kmL, y= as.factor(car))) + 
+  geom_point()
+```
+
+From the above plot, we can see that data is distributed simultaneously in whole graph. This shows that the design is balanced.
+
+### B)
+
+Construct two different preliminary graphs that investigate different features of the data and comment.
+
+```{r}
+ggplot(kml_data, aes(x=kmL, y=as.factor(car), fill=as.factor(driver))) +
+  geom_boxplot() + xlab("kmL") + ylab("car")
+ggplot(kml_data, aes(x=kmL, y=as.factor(car), fill=as.factor(driver))) +
+  geom_bar(position="dodge", stat="identity")+ xlab("kmL") + ylab("car")
+```
+
+Each driver is working on different cars. The driver B is riding most efficient cars. It has high km/l efficiency,therefore, the plot stacked above shows that driver b drives efficient cars.
+
+
+### C)
+
+Analyze the data, stating null and alternative hypothesis for each test, and check assumptions.
+
+```{r}
+#H0: Driver & car are not effecting the kmL 
+#H1: Driver & car are effecting the kmL
+str(kml_data)
+summary(kml_data)
+
+model_check <- lm(kmL~. , data = kml_data)
+summary(model_check)
+```
+
+Model gives 98% variance showing that it is working perfectly. P value is less than 0.05 showing that null hypothesis is rejected. So, alternative hypothesis is considered and driver and the car are therefore effecting the kmL is accepted. By doing a hypothesis test.
+
+```{r}
+anova(model_check)
+```
+
+It looks that driver is more significant than car and therefore, car efficiency depends more on the driver.
+
+
+### D)
+
+State your conclusions about the effect of driver and car on the efficiency kmL. These conclusions are only required to be at the qualitative level and can be based off the outcomes of the hypothesis tests in c. and the preliminary plots in b.. You do not need to statistically examine the multiple comparisons between contrasts and interactions.
+
+
+We used the results of the above research to create a scatter plot to assess the design balance, which revealed that the design is balanced. Part b shows that the B car driver is more efficient, with an efficiency of over 15 percent. In part three, the linear model and anova hypothesis testing are used to evaluate kmL. The 98 percent variance is calculated using a linear regression model, which demonstrates the significance of both the driver and the car variables. Driver variable is more significant than the car variable according to the anova results.
+
+
